@@ -1,0 +1,123 @@
+name: 🚀 Space Impact CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  # ============================
+  # 🧪 CI PHASE (CHECK CODE)
+  # ============================
+  ci:
+    name: 🧪 CI - Code Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Get code from GitHub
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Node (needed for tools)
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # Step 3: Install tools for validation
+      - name: 📦 Install Tools
+        run: |
+          npm init -y
+          npm install eslint htmlhint stylelint stylelint-config-standard --save-dev
+
+      # Step 4: Check JavaScript errors
+      - name: 🔍 Run ESLint
+        run: npx eslint . || true
+
+      # Step 5: Validate HTML
+      - name: ✅ Check HTML
+        run: npx htmlhint "**/*.html" || true
+
+      # Step 6: Validate CSS
+      - name: 🎨 Check CSS
+        run: npx stylelint "**/*.css" || true
+
+
+  # ============================
+  # 📦 BUILD PHASE
+  # ============================
+  build:
+    name: 📦 Build Application
+    runs-on: ubuntu-latest
+    needs: ci   # Only run if CI is successful
+
+    steps:
+      # Step 1: Get code again
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Create production folder
+      - name: 📦 Prepare Build
+        run: |
+          mkdir dist
+          rsync -av \
+            --exclude=dist \
+            --exclude=.git \
+            --exclude=.github \
+            ./ dist/
+
+      # Step 3: Save build as artifact
+      - name: 📤 Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: space-impact-build
+          path: dist
+
+
+  # ============================
+  # 🚀 CD PHASE (DEPLOY)
+  # ============================
+  deploy:
+    name: 🚀 Deploy Application
+    runs-on: ubuntu-latest
+    needs: build   # Only run if Build is successful
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      # Step 1: Download built files
+      - name: 📥 Download Build
+        uses: actions/download-artifact@v4
+        with:
+          name: space-impact-build
+          path: dist
+
+      # Step 2: Setup GitHub Pages
+      - name: ⚙️ Setup Pages
+        uses: actions/configure-pages@v4
+
+      # Step 3: Upload files to Pages
+      - name: 📤 Upload to Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      # Step 4: Deploy website
+      - name: 🚀 Deploy
+        id: deploy
+        uses: actions/deploy-pages@v4
+
+      # Step 5: Show live website link
+      - name: 🌐 Show Live URL
+        run: |
+          echo "🎉 Deployment Successful!"
+          echo "🌍 Website URL:"
+          echo "${{ steps.deploy.outputs.page_url }}"

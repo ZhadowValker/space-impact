@@ -6,7 +6,7 @@ A retro-style 2D space shooter built using **HTML5 Canvas, CSS, and JavaScript**
 
 ## 🎮 Features
 
-- 🚀 Player-controlled spaceship with smooth movement  
+- 🚀 Player-controlled spaceship with smooth movement with proper UI
 - 👾 Multiple enemy types with unique behaviors  
 - 🔫 Shooting mechanics with upgrades (Rapid Fire, Triple Shot)  
 - 🛡️ Power-ups: Shield, Extra Life, Weapon Boosts  
